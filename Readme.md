@@ -66,3 +66,20 @@ export RUSTICL_ENABLE=radeonsi
 
 # As root on SteamOS
 echo performance > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
+pi-gpu/
+├── pi_gpu.c       # Complete program (host + kernels)
+├── README.md      # This file
+└── pi_*_digits.txt # Generated output
+
+
+## Key Design Decisions
+
+1. **C instead of Fortran** — OpenCL host code is natively C, and mixing Fortran + OpenCL + GMP interop would be fragile. C gives direct access to the OpenCL API without binding layers.
+
+2. **Two-phase approach** — The GPU handles the embarrassingly parallel leaf evaluation (thousands of independent terms), while the CPU handles the merge tree where dependencies make GPU parallelism harder to exploit.
+
+3. **32-bit limbs in GPU kernels** — RDNA 2's native 32-bit integer multiply produces a 64-bit result via `ulong`, avoiding the need for multi-precision arithmetic within the kernel itself.
+
+4. **Unified memory** — The Steam Deck's APU shares LPDDR5 between CPU and GPU. Using `CL_MEM_ALLOC_HOST_PTR` means zero-copy access, eliminating the biggest bottleneck in discrete-GPU setups.
+
+5. **Batch size of 4096** — Balances GPU occupancy (enough work-items to fill 8 CUs) against the per-dispatch overhead. Each batch of 4096 terms produces ~56,000 digits worth of partial results.
