@@ -67,6 +67,7 @@ export RUSTICL_ENABLE=radeonsi
 # As root on SteamOS
 echo performance > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
 pi-gpu/
+
 ├── pi_gpu.c       # Complete program (host + kernels)
 ├── README.md      # This file
 └── pi_*_digits.txt # Generated output
